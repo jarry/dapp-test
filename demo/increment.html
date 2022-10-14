@@ -1,0 +1,321 @@
+<html>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <style type="text/css">
+    * {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+    code {
+      display: block;
+      padding: 5px;
+      background-color: rgb(249, 231, 231);
+    }
+  </style>
+  <script
+    type="text/javascript"
+    src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"
+  ></script>
+  <script>
+    // 1、创建一个web3的实例，连接区块链服务
+    const serverAddress = 'ws://localhost:8545'
+    const web3 = new Web3(Web3.givenProvider || serverAddress)
+
+    // 2、复制abi，来自compile.js里面编译的智能合约接口
+    const abi = [
+      {
+        inputs: [
+          { internalType: 'uint256', name: 'initialNumber', type: 'uint256' },
+        ],
+        stateMutability: 'nonpayable',
+        type: 'constructor',
+      },
+      {
+        inputs: [],
+        name: 'getNumber',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'value', type: 'uint256' }],
+        name: 'increment',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'value', type: 'uint256' }],
+        name: 'multiple',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'number',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'reset',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'num', type: 'uint256' }],
+        name: 'setNumber',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+    ]
+
+    // 3、从启动的server里选择一个私钥，合约交易时用到
+    const privatekey =
+      '0x66f490eccb60103e8f5cf04954986da3c6efd99b1a2d34431222722c6ece87ae'
+
+    // 4、连接到合约地址，地址来自部署时得到
+    const contractAddress = '0xed1175b345366649F48d100a68D3EA9B0AebC30F'
+    const incrementer = new web3.eth.Contract(abi, contractAddress)
+    // 通过私钥访问
+    const account = web3.eth.accounts.privateKeyToAccount(privatekey)
+    const accountFrom = {
+      privateKey: privatekey,
+      accountAddress: account.address,
+    }
+    // 打印合约里面的全部方法
+    console.log('incrementer.methods: ', incrementer.methods)
+
+    /**  函数区域 ***/
+
+    // 获取合约里面的数字
+    async function getNumber() {
+      console.log(`Making a call to contract at address: ${contractAddress}`)
+      const result = await incrementer.methods.getNumber().call()
+      console.log(`incrementer.methods.getNumber(): ${result}`)
+
+      return result
+    }
+
+    // 调用合约里面的数字增加函数
+    async function increment(incrementNumber = 5) {
+      const incrementTx = incrementer.methods.increment(incrementNumber)
+      console.log(`执行新增 ${incrementNumber} ，合约地址: ${contractAddress}`)
+
+      const accountFrom = {
+        privateKey: privatekey,
+        accountAddress: account.address,
+      }
+
+      // 交易签名
+      const createTransaction = await web3.eth.accounts.signTransaction(
+        {
+          to: contractAddress,
+          data: incrementTx.encodeABI(),
+          gas: await incrementTx.estimateGas(),
+        },
+        accountFrom.privateKey,
+      )
+
+      // 执行交易，得到收据
+      const createReceipt = await web3.eth.sendSignedTransaction(
+        createTransaction.rawTransaction,
+      )
+      console.log(`交易成功！交易hash为: ${createReceipt.transactionHash}`)
+
+      // 调用number查看结果
+      const data = await incrementer.methods.number().call()
+      console.log(`最新number: ${data}`)
+      return data
+    }
+
+    // 调用合约里面的数字设置函数
+    const setNumber = async (num) => {
+      const newNumber = num
+      const incrementTx = incrementer.methods.setNumber(newNumber)
+
+      console.log(`设置新数字 ${newNumber} ，合约地址: ${contractAddress}`)
+
+      // 交易签名
+      const createTransaction = await web3.eth.accounts.signTransaction(
+        {
+          to: contractAddress,
+          data: incrementTx.encodeABI(),
+          gas: await incrementTx.estimateGas(),
+        },
+        accountFrom.privateKey,
+      )
+
+      // 执行交易，得到收据
+      const createReceipt = await web3.eth.sendSignedTransaction(
+        createTransaction.rawTransaction,
+      )
+      console.log(`交易成功！交易hash为: ${createReceipt.transactionHash}`)
+
+      // 调用number查看结果
+      const data = await incrementer.methods.number().call()
+      console.log(`最新number: ${data}`)
+      return data
+    }
+
+    // 调用合约里面的数字清空函数
+    const reset = async () => {
+      const resetTx = incrementer.methods.reset()
+      console.log(
+        `执行 incrementer.methods.reset() ，合约地址: ${contractAddress}`,
+      )
+
+      // 交易签名
+      const createTransaction = await web3.eth.accounts.signTransaction(
+        {
+          to: contractAddress,
+          data: resetTx.encodeABI(),
+          gas: await resetTx.estimateGas(),
+        },
+        accountFrom.privateKey,
+      )
+
+      // 执行交易，得到收据
+      const createReceipt = await web3.eth.sendSignedTransaction(
+        createTransaction.rawTransaction,
+      )
+      console.log(`交易成功！交易hash为: ${createReceipt.transactionHash}`)
+
+      // 调用number查看结果
+      const data = await incrementer.methods.number().call()
+      console.log(`最新number: ${data}`)
+      return data
+    }
+
+    // 字符串拼接函数
+    function mergeVar(tpl, data = {}) {
+      if (typeof tpl !== 'string' || tpl === '') {
+        return tpl
+      }
+      try {
+        let str = ''
+        let reg = new RegExp(
+          '\\${\'?"?\\s*' + '([.:a-z0-9_s]+?)' + '\\s*\'?"?}',
+          'ig',
+        )
+        str = tpl.replace(reg, (tpl, name) => {
+          name = name.trim()
+          let value = data[name]
+          value = value === null ? '' : value
+          value = value === undefined ? '' : value
+          value = !value ? '' : value
+          return value
+        })
+        return str
+      } catch (e) {
+        logger.error('mergeVar', 'replace variable', 'error:', e)
+        return tpl
+      }
+    }
+  </script>
+  <h1>Web3 DApp 智能合约调用示例</h1>
+  <p id="basicInfo">
+    服务地址: ${serverAddress} <br />
+    私钥: ${privatekey} <br />
+    合约地址: ${contractAddress} <br />
+    合约代码接口: <code>${contractAbi}</code> <br />
+  </p>
+  <hr />
+  点击按钮调用智能合约
+  <button id="getNumberButton">调用函数getNumber():</button>
+  &nbsp;
+
+  <input id="incrementInput" type="number" style="width: 50px" value="10" />
+  <button id="incrementButton">增加数字increment():</button>
+  &nbsp;
+
+  <input id="setNumberInput" type="number" style="width: 50px" value="25" />
+  <button id="setNumberButton">设置数字setNumber():</button>
+  &nbsp;
+
+  <button id="resetButton">执行清零函数reset:</button>
+  <p id="outputInfo">
+    <code>
+      调用函数: ${functionName} 传递参数: ${params} 最新number: ${number}
+    </code>
+  </p>
+
+  <script type="text/javascript">
+    /**  执行区域 ***/
+    const basicInfoEle = document.querySelector('#basicInfo')
+    const basicInfoTpl = basicInfoEle.innerHTML
+    function displayBasicInfo() {
+      const data = {
+        serverAddress: serverAddress,
+        privatekey: privatekey,
+        contractAddress: contractAddress,
+        contractAbi: JSON.stringify(abi),
+      }
+      basicInfoEle.innerHTML = mergeVar(basicInfoTpl, data)
+    }
+
+    const outputInfoEle = document.querySelector('#outputInfo')
+    const outputInfoTpl = outputInfoEle.innerHTML
+    function displayOutputInfo(data) {
+      outputInfoEle.innerHTML = mergeVar(outputInfoTpl, data)
+    }
+    displayBasicInfo()
+
+    document
+      .querySelector('#getNumberButton')
+      .addEventListener('click', async () => {
+        const result = await getNumber()
+        const data = {
+          functionName: 'getNumber',
+          params: '',
+          number: result,
+        }
+        console.log(data)
+        displayOutputInfo(data)
+      })
+
+    const incrementInput = document.querySelector('#incrementInput')
+    document
+      .querySelector('#incrementButton')
+      .addEventListener('click', async () => {
+        const result = await increment(incrementInput.value)
+        const data = {
+          functionName: 'increment',
+          params: '',
+          number: result,
+        }
+        console.log(data)
+        displayOutputInfo(data)
+      })
+
+    const setNumberInput = document.querySelector('#setNumberInput')
+    document
+      .querySelector('#setNumberButton')
+      .addEventListener('click', async () => {
+        const result = await setNumber(setNumberInput.value)
+        const data = {
+          functionName: 'setNumber',
+          params: '',
+          number: result,
+        }
+        console.log(data)
+        displayOutputInfo(data)
+      })
+
+    document
+      .querySelector('#resetButton')
+      .addEventListener('click', async () => {
+        const result = await reset()
+        const data = {
+          functionName: 'reset',
+          params: '',
+          number: result,
+        }
+        console.log(data)
+        displayOutputInfo(data)
+      })
+  </script>
+</html>
