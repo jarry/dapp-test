@@ -16,8 +16,6 @@ contract Incrementer {
         number = number + value;
     }
 
-
-
     function reset() public {
         number = 0;
     }

@@ -1,0 +1,146 @@
+<html>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <style type="text/css">
+    * {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    code {
+      display: block;
+      padding: 5px;
+      background-color: yellow;
+    }
+  </style>
+  <script
+    type="text/javascript"
+    src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"
+  ></script>
+  <script>
+    // 账户私钥
+    const privatekey =
+      '0x04ffef0028921b2d87d7a20792cd164ffde68aed5d941c61212587042db0292c'
+
+    // 合约部署地址
+    const contractAddress = '0x5A31f0b24118Fc6B4a83F0FB1461E42Da56CEc64'
+
+    // 合约编译后的二进制接口
+    const incrementAbi = [
+      {
+        inputs: [
+          { internalType: 'uint256', name: 'initialNumber', type: 'uint256' },
+        ],
+        stateMutability: 'nonpayable',
+        type: 'constructor',
+      },
+      {
+        inputs: [],
+        name: 'getNumber',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'value', type: 'uint256' }],
+        name: 'increment',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'value', type: 'uint256' }],
+        name: 'multiple',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'number',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'reset',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'num', type: 'uint256' }],
+        name: 'setNumber',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+    ]
+
+    // 检查ethereum插件是否安装
+    // 安装地址：https://metamask.io/download/
+    if (window.ethereum && window.ethereum.isMetaMask) {
+      console.log('MetaMask已安装!')
+      console.log('账户是否登录', ethereum.isConnected())
+    } else {
+      console.error(
+        'MetaMask未安装!，请去 https://metamask.io/download.html 下载!',
+      )
+    }
+
+    ethereum.on('connect', (connectInfo) => {
+      console.log('连接上metamask:', connectInfo)
+    })
+    ethereum.on('断开metamask:', (error) => {
+      console.log(error)
+    })
+
+    // 获取登录账户信息，如果未登录则拉起插件登录框
+    async function getAccount() {
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+      return accounts
+    }
+
+    // 初始化web3
+    let web3
+    async function initWeb3() {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum)
+        console.log('web3:', web3)
+      } else {
+        console.warn('没有找到服务')
+        web3 = new Web3(
+          new Web3.providers.HttpProvider('http://127.0.0.1:8545'),
+        )
+      }
+
+      const networkId = await web3.eth.net.getId()
+      // 获取合约实例
+      const incrementer = new web3.eth.Contract(incrementAbi, contractAddress)
+      // 获取账户信息
+      const accounts = await web3.eth.getAccounts()
+      console.log('您的账户信息:', accounts)
+    }
+
+    // 通过metamask签名交易
+
+  </script>
+  <h1>Metamask调用测试</h1>
+  本页面需要通过webserver用域名访问方式打开，这样安装的插件才能生效。
+  <ul>
+    <li>先确认已安装Metamask，https://metamask.io/download.html</li>
+    <li>添加拉起登录框</li>
+    <li>登录后得到账户信息</li>
+  </ul>
+  <button class="enableEthereumButton">获取账户信息</button>
+  <h2>Account: <span class="showAccount"></span></h2>
+  <script type="text/javascript">
+    initWeb3()
+    const ethereumButton = document.querySelector('.enableEthereumButton')
+    const showAccount = document.querySelector('.showAccount')
+    async function displayAccount() {
+      const accounts = await getAccount()
+      console.log(accounts)
+      showAccount.innerHTML = accounts[0]
+    }
+    ethereumButton.addEventListener('click', displayAccount)
+  </script>
+</html>

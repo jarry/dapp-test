@@ -5,7 +5,7 @@ const contractFile = require('./compile')
 
 // 从启动的server里选择一个私钥
 const privatekey =
-  '0x66f490eccb60103e8f5cf04954986da3c6efd99b1a2d34431222722c6ece87ae'
+  '0xa2c50a788071fecc5075dcb1eef0e4ff2305e039c95ae46b86d49a0d79d3f688'
 
 // 获取合约二进制和二进制接口
 const bytecode = contractFile.evm.bytecode.object

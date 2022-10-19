@@ -5,7 +5,7 @@ const contractFile = require('./compile')
 
 // 从启动的server里选择一个私钥
 const privatekey =
-  '0x66f490eccb60103e8f5cf04954986da3c6efd99b1a2d34431222722c6ece87ae'
+  '0x9eb7d80f2a931895bab0ff3d05d3b5d84b08f3b73bd17995f36d2249405106b8'
 
 // 获取二进制接口
 const abi = contractFile.abi
@@ -21,7 +21,7 @@ const accountFrom = {
 }
 
 // 3、连接到合约地址，从部署的地址获取
-const contractAddress = '0xed1175b345366649F48d100a68D3EA9B0AebC30F'
+const contractAddress = '0x1db62437A431e643Af8efca9D73d1645e982f318'
 // 创建合约实例
 const incrementer = new web3.eth.Contract(abi, contractAddress)
 
